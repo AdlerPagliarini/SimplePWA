@@ -11,4 +11,6 @@ https://newsapi.org/
 Generate manifest
 https://app-manifest.firebaseapp.com/
 
+npm install --save workbox-sw
+
 

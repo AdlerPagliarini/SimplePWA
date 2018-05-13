@@ -1,3 +1,5 @@
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.2.0/workbox-sw.js');
+
 const cacheName = 'news-v1';
 
 const staticAssets = [
@@ -8,39 +10,20 @@ const staticAssets = [
   './images/offline.jpg'
 ];
 
-self.addEventListener('install', async function () {
-    console.log(`install`);
-    const cache = await caches.open('news-static');
-    cache.addAll(staticAssets);
-});
-
-self.addEventListener('fetch', event =>  {
-    console.log(`fetch`);
-    const req = event.request;
-    const url = new URL(req.url);
-
-    if(url.origin == location.origin)
-        event.respondWith(cacheFirst(req));
-    else
-        event.respondWith(networkFirst(req));
-});
-
-async function cacheFirst(req){
-    console.log(`cacheFirst`);
-    const cacheResponse = await caches.match(req);
-    return cacheResponse || fetch(req);
+// const workbox = new WorkboxSW(); version 2, version 3 does not need to initialize
+   //https://developers.google.com/web/tools/workbox/guides/migrations/migrate-from-v2#workbox-sw
+if (workbox) {
+   console.log(`Yay! Workbox is loaded 🎉`);
+   console.log(workbox);
+ } else {
+   console.log(`Boo! Workbox didn't load 😬`);
 }
 
-async function networkFirst(req){
-    console.log(`networkFirst`);
-    const cache = await caches.open('news-dynamic');
-    
-    try{
-        const res = await fetch(req);
-        cache.put(req, res.clone());
-        return res;
-    }catch(error){
-        const cachedResponse = await cache.match(req);
-        return cachedResponse || caches.match('./source/fallback.json');
-    }
-}
+//v2 workbox.precache(staticAssets);
+workbox.precaching.precache(staticAssets);
+
+//v2 - workbox.routing.registerRoute('https://newsapi.org/(.*)', workbox.strategies.networkFirst());
+workbox.routing.registerRoute(
+  new RegExp('^https://newsapi.org/(.*)'),
+  workbox.strategies.networkFirst(),
+);
